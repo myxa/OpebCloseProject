@@ -3,6 +3,33 @@ from typing import List
 from numpy.typing import NDArray
 
 
+class QCFC:
+    def __init__(self, data):
+        self.data = data
+
+    def _mean_fd_one(self, sub, run):
+        return np.mean(
+            self.data.get_confounds_one_subject(sub)[run-1]['framewise_displacement'][1:]) # FIX
+        
+    def mean_fd_vec(self, run):
+        vec = np.zeros(len(self.data.sub_labels))
+        failed = []
+        for en, sub in enumerate(self.data.sub_labels):
+            try:
+                vec[en] = self._mean_fd_one(sub, run)
+            except IndexError:
+                vec[en] = -1
+                failed.append(sub)
+                continue
+
+
+    def qc_fc(self, fc, run):
+        qc_mat = np.zeros((fc.shape[1], fc.shape[2]))
+        for i in range(fc.shape[1]):
+            for t in range(fc.shape[2]):
+                qc_mat[i, t] = np.corrcoef(fc[:, i, t], self.mean_fd_vec(run))#[0, 1]
+        return qc_mat
+
 class ICC:
     def __init__(self, data):
         self.data = data

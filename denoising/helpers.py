@@ -5,7 +5,9 @@ from nilearn.connectome import ConnectivityMeasure
 import pandas as pd
 
 
-def reorder_matrix(matr, atlas_name):
+import pandas as pd
+
+def reorder_matrix(matr):
     """
     Reorder FC matrix in Left-Right order
     
@@ -21,19 +23,19 @@ def reorder_matrix(matr, atlas_name):
     np.array
         Reordered matrix (wow!)
     """
-    if atlas_name == 'HCPex':
-        ids = np.loadtxt('../atlas/HCPex_id.txt', dtype=int) - 1
-    elif atlas_name == 'Schaefer200':
-        ids = np.loadtxt('../atlas/schaefer200_id.txt', dtype=int) - 1
+
+    df = pd.read_excel('../atlas/HCPex_sorted.xlsx',
+                            ).drop([401, 365, 398], axis=0).reset_index()
+    map = dict(zip(df.index, df.HCPex_ID.values))
 
     if isinstance(matr, np.ndarray) and len(matr.shape) == 3:
         sort_0 = np.zeros_like(matr)
         for i in range(len(matr)):
-            temp = matr[i][ids]
-            sort_0[i] = temp.T[ids]
+            temp = matr[i][map[i]]
+            sort_0[i] = temp.T[map[i]]
     else:
-        sort_0 = matr[ids]
-        sort_0 = sort_0.T[ids]
+        sort_0 = matr[map[i]]
+        sort_0 = sort_0.T[map[i]]
 
     return sort_0
 
