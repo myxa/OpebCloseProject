@@ -46,57 +46,7 @@ def plot_corr_hist(ts1, ts2, title=''):
     plt.title(f'{title}, median={round(np.median(l), 3)}');
 
 
-def functional_connectivity(ts, measure="correlation"):
-    """
-    Functional connectivity calculation
-
-    Parameters
-    ----------
-    ts: list, np.array
-        List of np.arrays or np.array of shape (2, :, :) or (3, :, :)
-    measure: str
-        One of ["covariance", "correlation", "partial correlation", "tangent", "precision"]. By default "correlation"
-
-    Returns
-    -------
-    list of np.arrays or np.array
-    """
-
-    connectivity_measure = ConnectivityMeasure(kind=measure, standardize=False)
-    fc = []
-    if isinstance(ts[0], list):
-        for l in ts:
-            calc = connectivity_measure.fit_transform(l)
-            for i in calc:
-                np.fill_diagonal(i, 0)
-            fc.append(calc)
-
-    elif (isinstance(ts, np.ndarray) and len(ts.shape) == 2):
-        fc = connectivity_measure.fit_transform([ts])
-        for i in fc:
-            np.fill_diagonal(i, 0)
-
-        if fc.shape[0] == 1:
-            fc = np.squeeze(fc)
-
-    elif isinstance(ts, np.ndarray) and len(ts.shape) == 3:
-        fc = connectivity_measure.fit_transform(ts)
-        for i in fc:
-            np.fill_diagonal(i, 0)
-
-        if fc.shape[0] == 1:
-            fc = np.squeeze(fc)
-
-    elif isinstance(ts, list):
-        fc = connectivity_measure.fit_transform(ts)
-        for i in fc:
-            np.fill_diagonal(i, 0)
-
-
-    return fc
-
-
-def load_timeseries(path, sub=None, run=1, task='rest', strategy=4, atlas_name='AAL'):
+def load_timeseries_yadisk(path, sub=None, run=1, task='rest', strategy=4, atlas_name='AAL'):
     """
     Load time series from folder.
     Time-series should be stored in a folder for each subject. In subject folders there should be folder for atlas.
@@ -185,13 +135,5 @@ def fetch_ts(path, sub=None, run=1, task='rest', strategy=4, atlas_name='AAL'):
 
 
 
-def mean_fd(sub, run, data):
-    return np.mean(data.get_confounds_one_subject(sub)[run-1]['framewise_displacement'][1:])
 
-def qc_fc(fc, run, mean_fd_vec):
-    qc_mat = np.zeros((fc.shape[1], fc.shape[2]))
-    for i in range(fc.shape[1]):
-        for t in range(fc.shape[2]):
-            qc_mat[i, t] = np.corrcoef(fc[:, i, t], mean_fd_vec[run-1])[0, 1]
-    return qc_mat
 

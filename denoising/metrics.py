@@ -4,6 +4,28 @@ from numpy.typing import NDArray
 
 
 class ICC:
+    def __init__(self, data):
+        self.data = data
+        self.k = data.shape[1] # ses
+        self.n = data.shape[0] # sub
+
+    def sstotal(self):
+        return np.var(self.data) * (self.k * self.n - 1)
+    
+    def msr(self):
+        return np.var(np.mean(self.data, axis=1)) * self.k
+    
+    def msc(self):
+        return np.var(np.mean(self.data, axis=0)) * self.n
+    
+    def mse(self):
+        return (self.sstotal() - self.msr() * (self.n -1) - self.msc() * (self.k - 1)) / (self.n - 1) * (self.k - 1)
+    
+    def icc(self):
+        return (self.msr() - self.mse()) / (self.msr() + (self.k - 1) * self.mse())
+
+
+class legacyICC:
     def __init__(self, data: List[NDArray], use_mask=False, mask_file=None):
         """
         Class to calculate ICC and BSS.
@@ -50,7 +72,7 @@ class ICC:
 
         """
         # group vecs by subject
-        sub_vec = [[self.data[ses][sub] for ses in range(self.n_ses)] for sub in range(self.n_sub)] # list(list*2)*47
+        sub_vec = [[self.data[ses][sub] for ses in range(self.n_ses)] for sub in range(self.n_sub)] # list(list*2)*nsub
         
         return np.sum([(self._avg_matr - 
                         np.mean(sub_vec[sub], axis=0)) **2 for sub in range(self.n_sub)], axis=0) * self.n_ses
@@ -66,7 +88,7 @@ class ICC:
                         np.mean(self.data[ses], axis=0)) **2 for ses in range(self.n_ses)], axis=0) * self.n_sub
 
 
-    def icc(self) -> float:
+    def icc(self) -> NDArray:
         """
         icc metric
 
@@ -97,3 +119,14 @@ def bss(a: List) -> float:
     for i in range(len(a[0])):
         ans[i] = np.corrcoef(a[0][i], a[1][i])[0, 1]
     return ans
+
+
+def mean_fd(sub, run, data):
+    return np.mean(data.get_confounds_one_subject(sub)[run-1]['framewise_displacement'][1:])
+
+def qc_fc(fc, run, mean_fd_vec):
+    qc_mat = np.zeros((fc.shape[1], fc.shape[2]))
+    for i in range(fc.shape[1]):
+        for t in range(fc.shape[2]):
+            qc_mat[i, t] = np.corrcoef(fc[:, i, t], mean_fd_vec[run-1])[0, 1]
+    return qc_mat
