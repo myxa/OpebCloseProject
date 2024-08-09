@@ -13,3 +13,4 @@ test_xcp
 files
 *.nii.gz
 /lasso_outputs
+*.npy
