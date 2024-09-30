@@ -236,7 +236,10 @@ class Denoising:
             os.makedirs(path_to_save)
             
         # TODO добавить в название файла GSR и smoothing
-        name = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
+
+        name_gsr = f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}_GSR.csv'
+        name_ =  f'sub-{sub}_task-{self.dataset.task}_run-{run+1}_time-series_{self.atlas.atlas_name}_strategy-{self.int_strategy}.csv'
+        name = name_gsr if self.use_GSR else name_
 
         df = pd.DataFrame(outputs)
         df.to_csv(os.path.join(path_to_save, name), index=False)
